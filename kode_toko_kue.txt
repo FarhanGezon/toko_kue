@@ -1,0 +1,2113 @@
+﻿=== NAMA FILE: \admin\edit.php ===
+<?php
+
+session_start();
+
+require_once "../includes/auth.php";
+
+require_once "../config/database.php";
+
+$id = isset($_GET['id'])
+    ? (int)$_GET['id']
+    : 0;
+
+$query = mysqli_query(
+    $conn,
+    "SELECT * FROM produk
+     WHERE id = $id"
+);
+
+$produk = mysqli_fetch_assoc($query);
+
+if (!$produk) {
+
+    die("Produk tidak ditemukan.");
+
+}
+
+?>
+
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <title>Edit Produk</title>
+
+    <link rel="stylesheet" href="../assets/style.css">
+
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="card">
+
+        <h1>Edit Produk</h1>
+
+        <?php include "../includes/flash.php"; ?>
+
+        <form
+            action="proses_produk.php"
+            method="POST"
+            enctype="multipart/form-data"
+        >
+
+            <input
+                type="hidden"
+                name="aksi"
+                value="edit"
+            >
+
+            <input
+                type="hidden"
+                name="id"
+                value="<?= $produk['id']; ?>"
+            >
+
+            <label>Nama Produk</label>
+
+            <input
+                type="text"
+                name="nama"
+                value="<?= htmlspecialchars($produk['nama']); ?>"
+                required
+            >
+
+            <label>Kategori</label>
+
+            <select name="kategori" required>
+
+                <option value="Cake"
+                    <?= $produk['kategori'] == 'Cake' ? 'selected' : ''; ?>>
+                    Cake
+                </option>
+
+                <option value="Brownies"
+                    <?= $produk['kategori'] == 'Brownies' ? 'selected' : ''; ?>>
+                    Brownies
+                </option>
+
+                <option value="Donat"
+                    <?= $produk['kategori'] == 'Donat' ? 'selected' : ''; ?>>
+                    Donat
+                </option>
+
+            </select>
+
+            <label>Deskripsi</label>
+
+            <textarea
+                name="deskripsi"
+                rows="5"
+                required
+            ><?= htmlspecialchars($produk['deskripsi']); ?></textarea>
+
+            <label>Harga</label>
+
+            <input
+                type="number"
+                name="harga"
+                value="<?= $produk['harga']; ?>"
+                required
+            >
+
+            <label>Stok</label>
+
+            <input
+                type="number"
+                name="stok"
+                value="<?= $produk['stok']; ?>"
+                required
+            >
+
+            <label>Ganti Gambar</label>
+
+            <input
+                type="file"
+                name="gambar"
+                accept=".jpg,.jpeg,.png,.webp"
+            >
+
+            <?php if ($produk['gambar']): ?>
+
+                <p>Gambar saat ini:</p>
+
+                <img
+                    src="../uploads/produk/<?= htmlspecialchars($produk['gambar']); ?>"
+                    width="150"
+                >
+
+            <?php endif; ?>
+
+            <br><br>
+
+            <button
+                type="submit"
+                class="btn"
+            >
+                Update Produk
+            </button>
+
+            <a
+                href="produk.php"
+                class="btn"
+            >
+                Kembali
+            </a>
+
+        </form>
+
+    </div>
+
+</div>
+
+</body>
+
+</html>
+
+
+=== NAMA FILE: \admin\hapus.php ===
+<?php
+
+session_start();
+
+require_once "../includes/auth.php";
+
+require_once "../config/database.php";
+
+$id = isset($_GET['id'])
+    ? (int)$_GET['id']
+    : 0;
+
+/*
+|--------------------------------------------------------------------------
+| AMBIL DATA GAMBAR
+|--------------------------------------------------------------------------
+*/
+
+$query = mysqli_query(
+    $conn,
+    "SELECT gambar FROM produk
+     WHERE id = $id"
+);
+
+$data = mysqli_fetch_assoc($query);
+
+/*
+|--------------------------------------------------------------------------
+| HAPUS FILE GAMBAR
+|--------------------------------------------------------------------------
+*/
+
+if (
+    $data &&
+    $data['gambar'] &&
+    file_exists(
+        "../uploads/produk/" .
+        $data['gambar']
+    )
+) {
+
+    unlink(
+        "../uploads/produk/" .
+        $data['gambar']
+    );
+}
+
+/*
+|--------------------------------------------------------------------------
+| HAPUS DATABASE
+|--------------------------------------------------------------------------
+*/
+
+$delete = mysqli_query(
+    $conn,
+    "DELETE FROM produk
+     WHERE id = $id"
+);
+
+if ($delete) {
+
+    $_SESSION['success'] =
+        "Produk berhasil dihapus.";
+
+} else {
+
+    $_SESSION['error'] =
+        "Produk gagal dihapus.";
+}
+
+header("Location: produk.php");
+
+exit;
+
+
+=== NAMA FILE: \admin\index.php ===
+<?php
+
+require_once "../includes/auth.php";
+
+require_once "../config/database.php";
+
+$total_produk = mysqli_query(
+    $conn,
+    "SELECT COUNT(*) AS total
+     FROM produk"
+);
+
+$data_produk = mysqli_fetch_assoc(
+    $total_produk
+);
+
+$total_kategori = mysqli_query(
+    $conn,
+    "SELECT COUNT(DISTINCT kategori) AS total
+     FROM produk"
+);
+
+$data_kategori = mysqli_fetch_assoc(
+    $total_kategori
+);
+
+?>
+
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <title>Dashboard Admin</title>
+
+    <link
+        rel="stylesheet"
+        href="../assets/style.css"
+    >
+
+</head>
+
+<body>
+
+<div class="navbar">
+
+    <div class="container">
+
+        <a href="index.php">
+            Dashboard
+        </a>
+
+        <a href="produk.php">
+            Produk
+        </a>
+
+        <a href="../index.php">
+            Website
+        </a>
+
+        <a href="logout.php">
+            Logout
+        </a>
+
+    </div>
+
+</div>
+
+<div class="container">
+
+    <h1>
+        Dashboard Admin
+    </h1>
+
+    <p>
+        Selamat datang,
+        <strong>
+            <?= htmlspecialchars(
+                $_SESSION['admin_nama']
+            ); ?>
+        </strong>
+    </p>
+
+    <div class="grid">
+
+        <div class="card">
+
+            <h3>Total Produk</h3>
+
+            <h1>
+                <?= $data_produk['total']; ?>
+            </h1>
+
+        </div>
+
+        <div class="card">
+
+            <h3>Total Kategori</h3>
+
+            <h1>
+                <?= $data_kategori['total']; ?>
+            </h1>
+
+        </div>
+
+        <div class="card">
+
+            <h3>Status</h3>
+
+            <h1>Aktif</h1>
+
+        </div>
+
+    </div>
+
+    <div class="card">
+
+        <h2>Manajemen Produk</h2>
+
+        <p>
+            Kelola katalog produk Sweet Cake.
+        </p>
+
+        <a
+            href="produk.php"
+            class="btn"
+        >
+            Kelola Produk
+        </a>
+
+    </div>
+
+</div>
+
+</body>
+
+</html>
+
+
+=== NAMA FILE: \admin\logout.php ===
+<?php
+
+session_start();
+
+/*
+|--------------------------------------------------------------------------
+| Hapus semua session
+|--------------------------------------------------------------------------
+*/
+
+$_SESSION = [];
+
+/*
+|--------------------------------------------------------------------------
+| Hapus cookie session
+|--------------------------------------------------------------------------
+*/
+
+if (ini_get("session.use_cookies")) {
+
+    $params = session_get_cookie_params();
+
+    setcookie(
+        session_name(),
+        '',
+        time() - 42000,
+        $params["path"],
+        $params["domain"],
+        $params["secure"],
+        $params["httponly"]
+    );
+}
+
+/*
+|--------------------------------------------------------------------------
+| Hancurkan session
+|--------------------------------------------------------------------------
+*/
+
+session_destroy();
+
+/*
+|--------------------------------------------------------------------------
+| Kembali ke login
+|--------------------------------------------------------------------------
+*/
+
+header("Location: ../auth/login.php");
+
+exit;
+
+
+=== NAMA FILE: \admin\produk.php ===
+<?php
+
+session_start();
+
+require_once "../includes/auth.php";
+
+require_once "../config/database.php";
+
+$keyword = $_GET['keyword'] ?? '';
+$kategori = $_GET['kategori'] ?? '';
+
+$where = [];
+
+if ($keyword != '') {
+    $keyword_safe = mysqli_real_escape_string($conn, $keyword);
+    $where[] = "nama LIKE '%$keyword_safe%'";
+}
+
+if ($kategori != '') {
+    $kategori_safe = mysqli_real_escape_string($conn, $kategori);
+    $where[] = "kategori = '$kategori_safe'";
+}
+
+$where_sql = "";
+
+if (count($where) > 0) {
+    $where_sql = "WHERE " . implode(" AND ", $where);
+}
+
+/*
+|--------------------------------------------------------------------------
+| PAGINATION
+|--------------------------------------------------------------------------
+*/
+
+$per_page = 5;
+
+$page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+
+if ($page < 1) {
+    $page = 1;
+}
+
+$offset = ($page - 1) * $per_page;
+
+$count_query = mysqli_query(
+    $conn,
+    "SELECT COUNT(*) AS total 
+     FROM produk
+     $where_sql"
+);
+
+$count_data = mysqli_fetch_assoc($count_query);
+
+$total_data = $count_data['total'];
+
+$total_page = ceil($total_data / $per_page);
+
+$query = mysqli_query(
+    $conn,
+    "SELECT * FROM produk
+     $where_sql
+     ORDER BY id DESC
+     LIMIT $per_page OFFSET $offset"
+);
+
+?>
+
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <title>Kelola Produk</title>
+
+    <link rel="stylesheet" href="../assets/style.css">
+
+</head>
+
+<body>
+
+<div class="navbar">
+
+    <div class="container">
+
+        <a href="index.php">Dashboard</a>
+
+        <a href="produk.php">Produk</a>
+
+        <a href="../index.php">Website</a>
+
+    </div>
+
+</div>
+
+<div class="container">
+
+    <h1>Kelola Produk</h1>
+
+    <?php include "../includes/flash.php"; ?>
+
+    <a href="tambah.php" class="btn">
+        + Tambah Produk
+    </a>
+
+    <br><br>
+
+    <!-- SEARCH & FILTER -->
+
+    <div class="card">
+
+        <form method="GET">
+
+            <label>
+                Cari Produk
+            </label>
+
+            <input
+                type="text"
+                name="keyword"
+                placeholder="Masukkan nama produk"
+                value="<?= htmlspecialchars($keyword); ?>"
+            >
+
+            <label>
+                Kategori
+            </label>
+
+            <select name="kategori">
+
+                <option value="">
+                    Semua Kategori
+                </option>
+
+                <option value="Cake"
+                    <?= $kategori == 'Cake' ? 'selected' : ''; ?>>
+                    Cake
+                </option>
+
+                <option value="Brownies"
+                    <?= $kategori == 'Brownies' ? 'selected' : ''; ?>>
+                    Brownies
+                </option>
+
+                <option value="Donat"
+                    <?= $kategori == 'Donat' ? 'selected' : ''; ?>>
+                    Donat
+                </option>
+
+            </select>
+
+            <button type="submit" class="btn">
+                Cari
+            </button>
+
+            <a href="produk.php" class="btn">
+                Reset
+            </a>
+
+        </form>
+
+    </div>
+
+    <div class="card">
+
+        <table>
+
+            <tr>
+
+                <th>No</th>
+                <th>Gambar</th>
+                <th>Nama</th>
+                <th>Kategori</th>
+                <th>Harga</th>
+                <th>Stok</th>
+                <th>Aksi</th>
+
+            </tr>
+
+            <?php
+
+            $no = $offset + 1;
+
+            while ($row = mysqli_fetch_assoc($query)):
+
+            ?>
+
+            <tr>
+
+                <td><?= $no++; ?></td>
+
+                <td>
+
+                    <?php if ($row['gambar']): ?>
+
+                        <img
+                            src="../uploads/produk/<?= htmlspecialchars($row['gambar']); ?>"
+                            width="80"
+                        >
+
+                    <?php else: ?>
+
+                        Tidak ada
+
+                    <?php endif; ?>
+
+                </td>
+
+                <td>
+                    <?= htmlspecialchars($row['nama']); ?>
+                </td>
+
+                <td>
+                    <?= htmlspecialchars($row['kategori']); ?>
+                </td>
+
+                <td>
+                    Rp <?= number_format($row['harga'], 0, ',', '.'); ?>
+                </td>
+
+                <td>
+                    <?= $row['stok']; ?>
+                </td>
+
+                <td>
+
+                    <a
+                        href="edit.php?id=<?= $row['id']; ?>"
+                        class="btn btn-warning"
+                    >
+                        Edit
+                    </a>
+
+                    <a
+                        href="hapus.php?id=<?= $row['id']; ?>"
+                        class="btn btn-danger"
+                        onclick="return confirm('Yakin ingin menghapus produk?')"
+                    >
+                        Hapus
+                    </a>
+
+                </td>
+
+            </tr>
+
+            <?php endwhile; ?>
+
+        </table>
+
+    </div>
+
+    <!-- PAGINATION -->
+
+    <div class="pagination">
+
+        <?php for ($i = 1; $i <= $total_page; $i++): ?>
+
+            <a
+                href="?page=<?= $i; ?>&keyword=<?= urlencode($keyword); ?>&kategori=<?= urlencode($kategori); ?>"
+            >
+                <?= $i; ?>
+            </a>
+
+        <?php endfor; ?>
+
+    </div>
+
+</div>
+
+</body>
+</html>
+
+
+=== NAMA FILE: \admin\proses_produk.php ===
+<?php
+
+require_once "../includes/auth.php";
+require_once "../config/database.php";
+
+session_start();
+
+$aksi = $_POST['aksi'] ?? '';
+
+/*
+|--------------------------------------------------------------------------
+| TAMBAH PRODUK
+|--------------------------------------------------------------------------
+*/
+
+if ($aksi == 'tambah') {
+
+    $nama = trim($_POST['nama'] ?? '');
+    $kategori = trim($_POST['kategori'] ?? '');
+    $deskripsi = trim($_POST['deskripsi'] ?? '');
+    $harga = $_POST['harga'] ?? '';
+    $stok = $_POST['stok'] ?? '';
+
+    // Validasi
+    if (
+        $nama == '' ||
+        $kategori == '' ||
+        $deskripsi == '' ||
+        $harga == '' ||
+        $stok == ''
+    ) {
+
+        $_SESSION['error'] =
+            "Semua data wajib diisi.";
+
+        header("Location: tambah.php");
+
+        exit;
+    }
+
+    // Validasi harga
+    if (!is_numeric($harga)) {
+
+        $_SESSION['error'] =
+            "Harga harus berupa angka.";
+
+        header("Location: tambah.php");
+
+        exit;
+    }
+
+    // Validasi stok
+    if (!is_numeric($stok)) {
+
+        $_SESSION['error'] =
+            "Stok harus berupa angka.";
+
+        header("Location: tambah.php");
+
+        exit;
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | UPLOAD GAMBAR
+    |--------------------------------------------------------------------------
+    */
+
+    $nama_file = null;
+
+    if (
+        isset($_FILES['gambar']) &&
+        $_FILES['gambar']['error'] == 0
+    ) {
+
+        $file = $_FILES['gambar'];
+
+        $extension = strtolower(
+            pathinfo(
+                $file['name'],
+                PATHINFO_EXTENSION
+            )
+        );
+
+        $allowed = [
+            'jpg',
+            'jpeg',
+            'png',
+            'webp'
+        ];
+
+        if (!in_array($extension, $allowed)) {
+
+            $_SESSION['error'] =
+                "Format gambar tidak diperbolehkan.";
+
+            header("Location: tambah.php");
+
+            exit;
+        }
+
+        if ($file['size'] > 2 * 1024 * 1024) {
+
+            $_SESSION['error'] =
+                "Ukuran gambar maksimal 2 MB.";
+
+            header("Location: tambah.php");
+
+            exit;
+        }
+
+        $nama_file =
+            uniqid() . "." . $extension;
+
+        move_uploaded_file(
+            $file['tmp_name'],
+            "../uploads/produk/" . $nama_file
+        );
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | ESCAPE DATA
+    |--------------------------------------------------------------------------
+    */
+
+    $nama = mysqli_real_escape_string(
+        $conn,
+        $nama
+    );
+
+    $kategori = mysqli_real_escape_string(
+        $conn,
+        $kategori
+    );
+
+    $deskripsi = mysqli_real_escape_string(
+        $conn,
+        $deskripsi
+    );
+
+    /*
+    |--------------------------------------------------------------------------
+    | INSERT DATA
+    |--------------------------------------------------------------------------
+    */
+
+    $query = mysqli_query(
+        $conn,
+        "INSERT INTO produk
+        (nama, kategori, deskripsi, harga, stok, gambar)
+        VALUES
+        ('$nama', '$kategori', '$deskripsi',
+         '$harga', '$stok', '$nama_file')"
+    );
+
+    if ($query) {
+
+        $_SESSION['success'] =
+            "Produk berhasil ditambahkan.";
+
+    } else {
+
+        $_SESSION['error'] =
+            "Produk gagal ditambahkan.";
+    }
+
+    header("Location: produk.php");
+
+    exit;
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| EDIT PRODUK
+|--------------------------------------------------------------------------
+*/
+
+if ($aksi == 'edit') {
+
+    $id = (int)$_POST['id'];
+
+    $nama = trim($_POST['nama'] ?? '');
+    $kategori = trim($_POST['kategori'] ?? '');
+    $deskripsi = trim($_POST['deskripsi'] ?? '');
+    $harga = $_POST['harga'] ?? '';
+    $stok = $_POST['stok'] ?? '';
+
+    /*
+    |--------------------------------------------------------------------------
+    | VALIDASI
+    |--------------------------------------------------------------------------
+    */
+
+    if (
+        $nama == '' ||
+        $kategori == '' ||
+        $deskripsi == '' ||
+        $harga == '' ||
+        $stok == ''
+    ) {
+
+        $_SESSION['error'] =
+            "Semua data wajib diisi.";
+
+        header("Location: edit.php?id=$id");
+
+        exit;
+    }
+
+    if (!is_numeric($harga)) {
+
+        $_SESSION['error'] =
+            "Harga harus berupa angka.";
+
+        header("Location: edit.php?id=$id");
+
+        exit;
+    }
+
+    if (!is_numeric($stok)) {
+
+        $_SESSION['error'] =
+            "Stok harus berupa angka.";
+
+        header("Location: edit.php?id=$id");
+
+        exit;
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | ESCAPE DATA
+    |--------------------------------------------------------------------------
+    */
+
+    $nama = mysqli_real_escape_string(
+        $conn,
+        $nama
+    );
+
+    $kategori = mysqli_real_escape_string(
+        $conn,
+        $kategori
+    );
+
+    $deskripsi = mysqli_real_escape_string(
+        $conn,
+        $deskripsi
+    );
+
+    /*
+    |--------------------------------------------------------------------------
+    | AMBIL DATA LAMA
+    |--------------------------------------------------------------------------
+    */
+
+    $old_query = mysqli_query(
+        $conn,
+        "SELECT gambar
+         FROM produk
+         WHERE id = $id"
+    );
+
+    $old_data = mysqli_fetch_assoc(
+        $old_query
+    );
+
+    $nama_file = $old_data['gambar'];
+
+    /*
+    |--------------------------------------------------------------------------
+    | JIKA ADA GAMBAR BARU
+    |--------------------------------------------------------------------------
+    */
+
+    if (
+        isset($_FILES['gambar']) &&
+        $_FILES['gambar']['error'] == 0
+    ) {
+
+        $file = $_FILES['gambar'];
+
+        $extension = strtolower(
+            pathinfo(
+                $file['name'],
+                PATHINFO_EXTENSION
+            )
+        );
+
+        $allowed = [
+            'jpg',
+            'jpeg',
+            'png',
+            'webp'
+        ];
+
+        if (!in_array($extension, $allowed)) {
+
+            $_SESSION['error'] =
+                "Format gambar tidak diperbolehkan.";
+
+            header("Location: edit.php?id=$id");
+
+            exit;
+        }
+
+        if ($file['size'] > 2 * 1024 * 1024) {
+
+            $_SESSION['error'] =
+                "Ukuran gambar maksimal 2 MB.";
+
+            header("Location: edit.php?id=$id");
+
+            exit;
+        }
+
+        /*
+        |----------------------------------------------------------------------
+        | NAMA FILE BARU
+        |----------------------------------------------------------------------
+        */
+
+        $nama_file =
+            uniqid() . "." . $extension;
+
+        /*
+        |----------------------------------------------------------------------
+        | UPLOAD
+        |----------------------------------------------------------------------
+        */
+
+        move_uploaded_file(
+            $file['tmp_name'],
+            "../uploads/produk/" . $nama_file
+        );
+
+        /*
+        |----------------------------------------------------------------------
+        | HAPUS GAMBAR LAMA
+        |----------------------------------------------------------------------
+        */
+
+        if (
+            $old_data['gambar'] &&
+            file_exists(
+                "../uploads/produk/" .
+                $old_data['gambar']
+            )
+        ) {
+
+            unlink(
+                "../uploads/produk/" .
+                $old_data['gambar']
+            );
+        }
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | UPDATE DATABASE
+    |--------------------------------------------------------------------------
+    */
+
+    $query = mysqli_query(
+        $conn,
+        "UPDATE produk SET
+
+        nama = '$nama',
+        kategori = '$kategori',
+        deskripsi = '$deskripsi',
+        harga = '$harga',
+        stok = '$stok',
+        gambar = '$nama_file'
+
+        WHERE id = $id"
+    );
+
+    /*
+    |--------------------------------------------------------------------------
+    | FLASH MESSAGE
+    |--------------------------------------------------------------------------
+    */
+
+    if ($query) {
+
+        $_SESSION['success'] =
+            "Produk berhasil diperbarui.";
+
+    } else {
+
+        $_SESSION['error'] =
+            "Produk gagal diperbarui.";
+    }
+
+    header("Location: produk.php");
+
+    exit;
+}
+
+
+=== NAMA FILE: \admin\tambah.php ===
+<?php
+
+session_start();
+
+require_once "../includes/auth.php";
+
+?>
+
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <title>Tambah Produk</title>
+
+    <link rel="stylesheet" href="../assets/style.css">
+
+</head>
+
+<body>
+
+<div class="navbar">
+
+    <div class="container">
+
+        <a href="index.php">Dashboard</a>
+        <a href="produk.php">Produk</a>
+
+    </div>
+
+</div>
+
+<div class="container">
+
+    <div class="card">
+
+        <h1>Tambah Produk</h1>
+
+        <form
+            action="proses_produk.php"
+            method="POST"
+            enctype="multipart/form-data"
+        >
+
+            <input
+                type="hidden"
+                name="aksi"
+                value="tambah"
+            >
+
+            <label>Nama Produk</label>
+
+            <input
+                type="text"
+                name="nama"
+                required
+            >
+
+            <label>Kategori</label>
+
+            <select name="kategori" required>
+
+                <option value="">
+                    Pilih kategori
+                </option>
+
+                <option value="Cake">
+                    Cake
+                </option>
+
+                <option value="Brownies">
+                    Brownies
+                </option>
+
+                <option value="Donat">
+                    Donat
+                </option>
+
+            </select>
+
+            <label>Deskripsi</label>
+
+            <textarea
+                name="deskripsi"
+                rows="5"
+                required
+            ></textarea>
+
+            <label>Harga</label>
+
+            <input
+                type="number"
+                name="harga"
+                min="0"
+                required
+            >
+
+            <label>Stok</label>
+
+            <input
+                type="number"
+                name="stok"
+                min="0"
+                required
+            >
+
+            <label>Gambar Produk</label>
+
+            <input
+                type="file"
+                name="gambar"
+                accept=".jpg,.jpeg,.png,.webp"
+            >
+
+            <br>
+
+            <button
+                type="submit"
+                class="btn"
+            >
+                Simpan Produk
+            </button>
+
+            <a
+                href="produk.php"
+                class="btn"
+            >
+                Kembali
+            </a>
+
+        </form>
+
+    </div>
+
+</div>
+
+</body>
+</html>
+
+
+=== NAMA FILE: \auth\buat_admin.php ===
+<?php
+
+require_once "../config/database.php";
+
+$nama = "Administrator";
+$username = "admin";
+$password = "admin123";
+
+$password_hash = password_hash(
+    $password,
+    PASSWORD_DEFAULT
+);
+
+$query = mysqli_query(
+    $conn,
+    "INSERT INTO admin
+    (nama, username, password)
+    VALUES
+    ('$nama', '$username', '$password_hash')"
+);
+
+if ($query) {
+
+    echo "Admin berhasil dibuat.";
+
+} else {
+
+    echo "Gagal membuat admin.";
+}
+
+
+=== NAMA FILE: \auth\login.php ===
+<?php
+
+session_start();
+
+if (isset($_SESSION['admin_id'])) {
+
+    header("Location: ../admin/index.php");
+
+    exit;
+}
+
+?>
+
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <title>Login Admin - Sweet Cake</title>
+
+    <link rel="stylesheet" href="../assets/style.css">
+
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="card"
+         style="max-width: 450px; margin: 100px auto;">
+
+        <h1>Login Admin</h1>
+
+        <p>
+            Silakan login untuk masuk ke dashboard.
+        </p>
+
+        <?php
+
+        if (isset($_SESSION['error'])) {
+
+            echo '<div class="alert">'
+                . $_SESSION['error'] .
+                '</div>';
+
+            unset($_SESSION['error']);
+        }
+
+        ?>
+
+        <form
+            action="proses_login.php"
+            method="POST"
+        >
+
+            <label>
+                Username
+            </label>
+
+            <input
+                type="text"
+                name="username"
+                required
+            >
+
+            <label>
+                Password
+            </label>
+
+            <input
+                type="password"
+                name="password"
+                required
+            >
+
+            <button
+                type="submit"
+                class="btn"
+            >
+                Login
+            </button>
+
+        </form>
+
+        <br>
+
+        <a href="../index.php">
+            â† Kembali ke Website
+        </a>
+
+    </div>
+
+</div>
+
+</body>
+
+</html>
+
+
+=== NAMA FILE: \auth\proses_login.php ===
+<?php
+
+session_start();
+
+require_once "../config/database.php";
+
+$username = trim(
+    $_POST['username'] ?? ''
+);
+
+$password = $_POST['password'] ?? '';
+
+/*
+|--------------------------------------------------------------------------
+| VALIDASI
+|--------------------------------------------------------------------------
+*/
+
+if ($username == '' || $password == '') {
+
+    $_SESSION['error'] =
+        "Username dan password wajib diisi.";
+
+    header("Location: login.php");
+
+    exit;
+}
+
+/*
+|--------------------------------------------------------------------------
+| CARI USERNAME
+|--------------------------------------------------------------------------
+*/
+
+$username_safe = mysqli_real_escape_string(
+    $conn,
+    $username
+);
+
+$query = mysqli_query(
+    $conn,
+    "SELECT *
+     FROM admin
+     WHERE username = '$username_safe'
+     LIMIT 1"
+);
+
+$admin = mysqli_fetch_assoc($query);
+
+/*
+|--------------------------------------------------------------------------
+| CEK USERNAME DAN PASSWORD
+|--------------------------------------------------------------------------
+*/
+
+if (
+    $admin &&
+    password_verify(
+        $password,
+        $admin['password']
+    )
+) {
+
+    /*
+    |--------------------------------------------------------------------------
+    | LOGIN BERHASIL
+    |--------------------------------------------------------------------------
+    */
+
+    session_regenerate_id(true);
+
+    $_SESSION['admin_id'] =
+        $admin['id'];
+
+    $_SESSION['admin_nama'] =
+        $admin['nama'];
+
+    $_SESSION['admin_username'] =
+        $admin['username'];
+
+    header("Location: ../admin/index.php");
+
+    exit;
+
+} else {
+
+    /*
+    |--------------------------------------------------------------------------
+    | LOGIN GAGAL
+    |--------------------------------------------------------------------------
+    */
+
+    $_SESSION['error'] =
+        "Username atau password salah.";
+
+    header("Location: login.php");
+
+    exit;
+}
+
+
+=== NAMA FILE: \config\database.php ===
+<?php
+
+$host = "localhost";
+$user = "root";
+$password = "";
+$database = "toko_kue";
+
+$conn = mysqli_connect($host, $user, $password, $database);
+
+if (!$conn) {
+    die("Koneksi database gagal: " . mysqli_connect_error());
+}
+
+
+=== NAMA FILE: \includes\auth.php ===
+<?php
+
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+if (!isset($_SESSION['admin_id'])) {
+
+    $_SESSION['error'] =
+        "Silakan login terlebih dahulu.";
+
+    header("Location: ../auth/login.php");
+
+    exit;
+}
+
+
+=== NAMA FILE: \includes\flash.php ===
+<?php
+
+if (isset($_SESSION['success'])) {
+    echo '<div class="alert">' . $_SESSION['success'] . '</div>';
+    unset($_SESSION['success']);
+}
+
+if (isset($_SESSION['error'])) {
+    echo '<div class="alert">' . $_SESSION['error'] . '</div>';
+    unset($_SESSION['error']);
+}
+
+
+=== NAMA FILE: \includes\footer.php ===
+
+
+=== NAMA FILE: \includes\header.php ===
+
+
+=== NAMA FILE: \detail.php ===
+<?php
+
+require_once "config/database.php";
+
+$id = isset($_GET['id'])
+    ? (int)$_GET['id']
+    : 0;
+
+$query = mysqli_query(
+    $conn,
+    "SELECT * FROM produk
+     WHERE id = $id"
+);
+
+$produk = mysqli_fetch_assoc($query);
+
+if (!$produk) {
+
+    die("Produk tidak ditemukan.");
+
+}
+
+?>
+
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <title>
+        <?= htmlspecialchars($produk['nama']); ?>
+    </title>
+
+    <link rel="stylesheet" href="assets/style.css">
+
+</head>
+
+<body>
+
+<div class="navbar">
+
+    <div class="container">
+
+        <a href="index.php">
+            Sweet Cake
+        </a>
+
+        <a href="produk.php">
+            Produk
+        </a>
+
+    </div>
+
+</div>
+
+<div class="container">
+
+    <div class="card">
+
+        <?php if ($produk['gambar']): ?>
+
+            <img
+                src="uploads/produk/<?= htmlspecialchars($produk['gambar']); ?>"
+                class="product-image"
+            >
+
+        <?php endif; ?>
+
+        <h1>
+            <?= htmlspecialchars($produk['nama']); ?>
+        </h1>
+
+        <p>
+            Kategori:
+            <?= htmlspecialchars($produk['kategori']); ?>
+        </p>
+
+        <p>
+            <?= nl2br(
+                htmlspecialchars($produk['deskripsi'])
+            ); ?>
+        </p>
+
+        <h2>
+            Rp <?= number_format(
+                $produk['harga'],
+                0,
+                ',',
+                '.'
+            ); ?>
+        </h2>
+
+        <p>
+            Stok:
+            <?= $produk['stok']; ?>
+        </p>
+
+        <a
+            href="produk.php"
+            class="btn"
+        >
+            Kembali
+        </a>
+
+    </div>
+
+</div>
+
+</body>
+
+</html>
+
+
+=== NAMA FILE: \index.php ===
+<?php
+
+require_once "config/database.php";
+
+$query = mysqli_query(
+    $conn,
+    "SELECT * FROM produk
+     ORDER BY id DESC
+     LIMIT 6"
+);
+
+?>
+
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <title>Sweet Cake - Toko Kue</title>
+
+    <link rel="stylesheet" href="assets/style.css">
+
+</head>
+
+<body>
+
+<div class="navbar">
+
+    <div class="container">
+
+        <a href="index.php">
+            Sweet Cake
+        </a>
+
+        <a href="produk.php">
+            Produk
+        </a>
+
+        <a href="tentang.php">
+            Tentang Kami
+        </a>
+
+    </div>
+
+</div>
+
+<section class="hero">
+
+    <div class="container">
+
+        <h1>
+            Sweet Cake
+        </h1>
+
+        <p>
+            Kue lezat untuk setiap momen spesial.
+        </p>
+
+        <a
+            href="produk.php"
+            class="btn"
+        >
+            Lihat Produk
+        </a>
+
+    </div>
+
+</section>
+
+<div class="container">
+
+    <h2>Produk Terbaru</h2>
+
+    <div class="grid">
+
+        <?php while ($row = mysqli_fetch_assoc($query)): ?>
+
+        <div class="card">
+
+            <?php if ($row['gambar']): ?>
+
+                <img
+                    src="uploads/produk/<?= htmlspecialchars($row['gambar']); ?>"
+                    class="product-image"
+                >
+
+            <?php endif; ?>
+
+            <h3>
+                <?= htmlspecialchars($row['nama']); ?>
+            </h3>
+
+            <p>
+                <?= htmlspecialchars($row['kategori']); ?>
+            </p>
+
+            <strong>
+                Rp <?= number_format(
+                    $row['harga'],
+                    0,
+                    ',',
+                    '.'
+                ); ?>
+            </strong>
+
+            <br><br>
+
+            <a
+                href="detail.php?id=<?= $row['id']; ?>"
+                class="btn"
+            >
+                Detail
+            </a>
+
+        </div>
+
+        <?php endwhile; ?>
+
+    </div>
+
+</div>
+
+</body>
+
+</html>
+
+
+=== NAMA FILE: \produk.php ===
+<?php
+
+require_once "config/database.php";
+
+$keyword = $_GET['keyword'] ?? '';
+
+if ($keyword != '') {
+
+    $keyword_safe = mysqli_real_escape_string(
+        $conn,
+        $keyword
+    );
+
+    $query = mysqli_query(
+        $conn,
+        "SELECT * FROM produk
+         WHERE nama LIKE '%$keyword_safe%'
+         ORDER BY id DESC"
+    );
+
+} else {
+
+    $query = mysqli_query(
+        $conn,
+        "SELECT * FROM produk
+         ORDER BY id DESC"
+    );
+}
+
+?>
+
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <title>Produk - Sweet Cake</title>
+
+    <link rel="stylesheet" href="assets/style.css">
+
+</head>
+
+<body>
+
+<div class="navbar">
+
+    <div class="container">
+
+        <a href="index.php">
+            Sweet Cake
+        </a>
+
+        <a href="produk.php">
+            Produk
+        </a>
+
+        <a href="tentang.php">
+            Tentang Kami
+        </a>
+
+    </div>
+
+</div>
+
+<div class="container">
+
+    <h1>Daftar Produk</h1>
+
+    <div class="card">
+
+        <form method="GET">
+
+            <input
+                type="text"
+                name="keyword"
+                placeholder="Cari produk..."
+                value="<?= htmlspecialchars($keyword); ?>"
+            >
+
+            <button
+                type="submit"
+                class="btn"
+            >
+                Cari
+            </button>
+
+        </form>
+
+    </div>
+
+    <div class="grid">
+
+        <?php while ($row = mysqli_fetch_assoc($query)): ?>
+
+        <div class="card">
+
+            <?php if ($row['gambar']): ?>
+
+                <img
+                    src="uploads/produk/<?= htmlspecialchars($row['gambar']); ?>"
+                    class="product-image"
+                >
+
+            <?php endif; ?>
+
+            <h3>
+                <?= htmlspecialchars($row['nama']); ?>
+            </h3>
+
+            <p>
+                <?= htmlspecialchars($row['deskripsi']); ?>
+            </p>
+
+            <h3>
+                Rp <?= number_format(
+                    $row['harga'],
+                    0,
+                    ',',
+                    '.'
+                ); ?>
+            </h3>
+
+            <a
+                href="detail.php?id=<?= $row['id']; ?>"
+                class="btn"
+            >
+                Lihat Detail
+            </a>
+
+        </div>
+
+        <?php endwhile; ?>
+
+    </div>
+
+</div>
+
+</body>
+
+</html>
+
+
+=== NAMA FILE: \tentang.php ===
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <title>Tentang Kami - Sweet Cake</title>
+
+    <link rel="stylesheet" href="assets/style.css">
+
+</head>
+
+<body>
+
+<div class="navbar">
+
+    <div class="container">
+
+        <a href="index.php">
+            Sweet Cake
+        </a>
+
+        <a href="produk.php">
+            Produk
+        </a>
+
+        <a href="tentang.php">
+            Tentang Kami
+        </a>
+
+    </div>
+
+</div>
+
+<div class="container">
+
+    <div class="card">
+
+        <h1>Tentang Sweet Cake</h1>
+
+        <p>
+            Sweet Cake adalah UMKM yang bergerak
+            dalam bidang produksi dan penjualan
+            berbagai macam kue.
+        </p>
+
+        <p>
+            Kami menyediakan produk kue untuk
+            kebutuhan keluarga, acara ulang tahun,
+            pernikahan, maupun berbagai acara lainnya.
+        </p>
+
+        <h2>Kontak</h2>
+
+        <p>
+            WhatsApp:
+            08xxxxxxxxxx
+        </p>
+
+        <p>
+            Instagram:
+            @sweetcake
+        </p>
+
+    </div>
+
+</div>
+
+</body>
+
+</html>
+
+
+=== NAMA FILE: \toko_kue.sql ===
+-- phpMyAdmin SQL Dump
+-- version 4.8.0.1
+-- https://www.phpmyadmin.net/
+--
+-- Host: 127.0.0.1
+-- Waktu pembuatan: 27 Sep 2026 pada 16.37
+-- Versi server: 10.1.32-MariaDB
+-- Versi PHP: 7.2.5
+
+SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
+SET AUTOCOMMIT = 0;
+START TRANSACTION;
+SET time_zone = "+00:00";
+
+
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
+/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
+/*!40101 SET NAMES utf8mb4 */;
+
+--
+-- Database: `toko_kue`
+--
+
+-- --------------------------------------------------------
+
+--
+-- Struktur dari tabel `admin`
+--
+
+CREATE TABLE `admin` (
+  `id` int(11) NOT NULL,
+  `nama` varchar(100) NOT NULL,
+  `username` varchar(50) NOT NULL,
+  `password` varchar(255) NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+--
+-- Dumping data untuk tabel `admin`
+--
+
+INSERT INTO `admin` (`id`, `nama`, `username`, `password`, `created_at`) VALUES
+(1, 'Administrator', 'admin', '$2y$10$98vbxh4xT65X0Rnc9/L33eWkPdxz8VL4hbvd338D7IILqDOqYj4e6', '2026-09-27 13:56:08');
+
+-- --------------------------------------------------------
+
+--
+-- Struktur dari tabel `produk`
+--
+
+CREATE TABLE `produk` (
+  `id` int(11) NOT NULL,
+  `nama` varchar(100) NOT NULL,
+  `kategori` varchar(50) NOT NULL,
+  `deskripsi` text NOT NULL,
+  `harga` decimal(12,2) NOT NULL,
+  `stok` int(11) NOT NULL DEFAULT '0',
+  `gambar` varchar(255) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+--
+-- Dumping data untuk tabel `produk`
+--
+
+INSERT INTO `produk` (`id`, `nama`, `kategori`, `deskripsi`, `harga`, `stok`, `gambar`, `created_at`) VALUES
+(1, 'Brownies Coklat', 'Brownies', 'Brownies coklat lembut dengan topping coklat premium.', '45000.00', 20, 'brownies.jpg', '2026-09-27 13:32:53'),
+(2, 'Cheese Cake', 'Cake', 'Cheese cake lembut dengan rasa keju yang creamy.', '65000.00', 15, 'cheesecake.jpg', '2026-09-27 13:32:53'),
+(3, 'Donat Coklat', 'Donat', 'Donat lembut dari bahan kentang asli dengan topping coklat yang masnis.', '30000.00', 25, 'donat.jpg', '2026-09-27 13:32:53');
+
+--
+-- Indexes for dumped tables
+--
+
+--
+-- Indeks untuk tabel `admin`
+--
+ALTER TABLE `admin`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `username` (`username`);
+
+--
+-- Indeks untuk tabel `produk`
+--
+ALTER TABLE `produk`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- AUTO_INCREMENT untuk tabel yang dibuang
+--
+
+--
+-- AUTO_INCREMENT untuk tabel `admin`
+--
+ALTER TABLE `admin`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
+-- AUTO_INCREMENT untuk tabel `produk`
+--
+ALTER TABLE `produk`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+COMMIT;
+
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+
+
