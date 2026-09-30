@@ -8,37 +8,37 @@ Aplikasi berbasis web untuk profil usaha dan katalog produk kue (UMKM Sweet Cake
 
 ### Versi 1.1.0 - Penyempurnaan Keamanan & Fitur Kategori Dinamis
 * **Fitur Baru (CRUD Kategori):**
-  * Penambahan skema tabel `kategori` pada database[cite: 5].
+  * Penambahan skema tabel `kategori` pada database.
   * Halaman manajemen kategori (`admin/kategori.php`) untuk menambah dan menghapus kategori kue secara dinamis.
-  * Dropdown form tambah/edit produk kini terintegrasi secara dinamis dengan tabel kategori[cite: 5].
+  * Dropdown form tambah/edit produk kini terintegrasi secara dinamis dengan tabel kategori.
 * **Keamanan Database (Prepared Statements):**
-  * Seluruh manipulasi data (Create, Update, Delete) dan query pencarian/filter diubah menggunakan **Prepared Statements** (`mysqli_prepare` & `bind_param`) untuk memitigasi risiko SQL Injection[cite: 5].
+  * Seluruh manipulasi data (Create, Update, Delete) dan query pencarian/filter diubah menggunakan **Prepared Statements** (`mysqli_prepare` & `bind_param`) untuk memitigasi risiko SQL Injection.
 * **Validasi Sisi Server (Server-Side Validation):**
-  * Penambahan validasi pembatasan panjang karakter deskripsi (`strlen() <= 255`)[cite: 5].
-  * Validasi tipe data numerik untuk harga dan stok produk[cite: 5].
-  * Pembatasan berkas unggahan gambar (hanya ekstensi `.jpg`, `.jpeg`, `.png`, `.webp` dengan batas ukuran maksimal 2 MB)[cite: 5].
+  * Penambahan validasi pembatasan panjang karakter deskripsi (`strlen() <= 255`).
+  * Validasi tipe data numerik untuk harga dan stok produk.
+  * Pembatasan berkas unggahan gambar (hanya ekstensi `.jpg`, `.jpeg`, `.png`, `.webp` dengan batas ukuran maksimal 2 MB).
 * **Modularisasi Layout (DRY - Don't Repeat Yourself):**
-  * Implementasi komponen terpusat pada `includes/header.php` dan `includes/footer.php` untuk seluruh halaman publik (`index.php`, `produk.php`, `detail.php`, `tentang.php`)[cite: 5].
+  * Implementasi komponen terpusat pada `includes/header.php` dan `includes/footer.php` untuk seluruh halaman publik (`index.php`, `produk.php`, `detail.php`, `tentang.php`).
 * **Portabilitas Database:**
-  * Pembaruan skrip `toko_kue.sql` dengan menyertakan instruksi `CREATE DATABASE IF NOT EXISTS` dan `USE toko_kue;` untuk kemudahan instalasi[cite: 5].
+  * Pembaruan skrip `toko_kue.sql` dengan menyertakan instruksi `CREATE DATABASE IF NOT EXISTS` dan `USE toko_kue;` untuk kemudahan instalasi.
 
 ---
 
 ## Fitur Utama
 
 ### Sisi Publik (Katalog Pelanggan)
-* **Beranda:** Menampilkan hero banner pengenalan dan 6 daftar produk terbaru[cite: 5].
-* **Daftar Produk:** Katalog lengkap dengan fitur pencarian nama produk dan filter kategori dinamis[cite: 5].
-* **Detail Produk:** Informasi spesifik produk (foto beresolusi jelas, kategori, harga, stok, dan deskripsi)[cite: 5].
-* **Tentang Kami:** Profil singkat perusahaan dan kontak bisnis[cite: 5].
+* **Beranda:** Menampilkan hero banner pengenalan dan 6 daftar produk terbaru.
+* **Daftar Produk:** Katalog lengkap dengan fitur pencarian nama produk dan filter kategori dinamis.
+* **Detail Produk:** Informasi spesifik produk (foto beresolusi jelas, kategori, harga, stok, dan deskripsi).
+* **Tentang Kami:** Profil singkat perusahaan dan kontak bisnis.
 
 ### Sisi Administrator (Dashboard & CRUD)
-* **Autentikasi Aman:** Sistem login admin menggunakan enkripsi `password_hash()` dan verifikasi `password_verify()` dengan proteksi session `auth.php`[cite: 5].
-* **Statistik Dashboard:** Ringkasan jumlah total produk dan total kategori secara *real-time*[cite: 5].
-* **CRUD Produk:** Menambah produk baru beserta upload berkas gambar, memperbarui data, menghapus produk sekaligus menghapus file fisik gambar via `unlink()`[cite: 5].
+* **Autentikasi Aman:** Sistem login admin menggunakan enkripsi `password_hash()` dan verifikasi `password_verify()` dengan proteksi session `auth.php`.
+* **Statistik Dashboard:** Ringkasan jumlah total produk dan total kategori secara *real-time*.
+* **CRUD Produk:** Menambah produk baru beserta upload berkas gambar, memperbarui data, menghapus produk sekaligus menghapus file fisik gambar via `unlink()`.
 * **CRUD Kategori:** Mengelola kategori kue secara independen.
-* **Paginasi (Pagination):** Pembatasan data 5 baris per halaman menggunakan klausa SQL `LIMIT` dan `OFFSET`[cite: 5].
-* **Flash Messages:** Notifikasi umpan balik sukses/gagal berbasis session dengan pola *Post/Redirect/Get*[cite: 5].
+* **Paginasi (Pagination):** Pembatasan data 5 baris per halaman menggunakan klausa SQL `LIMIT` dan `OFFSET`.
+* **Flash Messages:** Notifikasi umpan balik sukses/gagal berbasis session dengan pola *Post/Redirect/Get*.
 
 ---
 
